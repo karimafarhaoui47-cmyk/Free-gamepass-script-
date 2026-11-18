@@ -1,0 +1,234 @@
+
+--// CLEAN ROBLOX LOADING SCREEN V3
+--// PC + MOBILE | AUTO START | POLISHED
+
+local Players = game:GetService("Players")
+local TweenService = game:GetService("TweenService")
+local RunService = game:GetService("RunService")
+
+local player = Players.LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui")
+
+-- CONFIGURATION
+local START_DELAY = 0.12
+local INCREASE_PER_PERCENT = 0.005
+local MAX_PERCENT = 99
+
+-- CLEANUP
+local old = playerGui:FindFirstChild("CleanLoading")
+if old then
+    old:Destroy()
+end
+
+-- SCREEN GUI
+local gui = Instance.new("ScreenGui")
+gui.Name = "CleanLoading"
+gui.IgnoreGuiInset = true
+gui.ResetOnSpawn = false
+gui.DisplayOrder = 999999
+gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+gui.Parent = playerGui
+
+-- BACKGROUND
+local background = Instance.new("Frame")
+background.Size = UDim2.fromScale(1, 1)
+background.BackgroundColor3 = Color3.fromRGB(17, 19, 26)
+background.BorderSizePixel = 0
+background.Parent = gui
+
+local bgGradient = Instance.new("UIGradient")
+bgGradient.Rotation = 90
+bgGradient.Color = ColorSequence.new({
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(25, 29, 42)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(13, 15, 21))
+})
+bgGradient.Parent = background
+
+-- CONTENT
+local content = Instance.new("CanvasGroup")
+content.Size = UDim2.new(0.82, 0, 0, 135)
+content.Position = UDim2.fromScale(0.5, 0.5)
+content.AnchorPoint = Vector2.new(0.5, 0.5)
+content.BackgroundTransparency = 1
+content.GroupTransparency = 1
+content.Parent = background
+
+local sizeLimit = Instance.new("UISizeConstraint")
+sizeLimit.MinSize = Vector2.new(250, 135)
+sizeLimit.MaxSize = Vector2.new(380, 135)
+sizeLimit.Parent = content
+
+-- ACCENT
+local accent = Instance.new("Frame")
+accent.Size = UDim2.fromOffset(30, 4)
+accent.Position = UDim2.new(0.5, -15, 0, 3)
+accent.BackgroundColor3 = Color3.fromRGB(0, 162, 255)
+accent.BorderSizePixel = 0
+accent.Parent = content
+
+Instance.new("UICorner", accent).CornerRadius = UDim.new(1, 0)
+
+-- TITLE
+local title = Instance.new("TextLabel")
+title.Size = UDim2.new(1, 0, 0, 34)
+title.Position = UDim2.fromOffset(0, 22)
+title.BackgroundTransparency = 1
+title.Text = "Loading"
+title.TextColor3 = Color3.fromRGB(255, 255, 255)
+title.TextSize = 25
+title.Font = Enum.Font.GothamBold
+title.Parent = content
+
+-- SUBTITLE
+local subtitle = Instance.new("TextLabel")
+subtitle.Size = UDim2.new(1, 0, 0, 20)
+subtitle.Position = UDim2.fromOffset(0, 57)
+subtitle.BackgroundTransparency = 1
+subtitle.Text = "Preparing your experience"
+subtitle.TextColor3 = Color3.fromRGB(155, 163, 180)
+subtitle.TextSize = 12
+subtitle.Font = Enum.Font.Gotham
+subtitle.Parent = content
+
+-- PROGRESS BACKGROUND
+local track = Instance.new("Frame")
+track.Size = UDim2.new(1, 0, 0, 6)
+track.Position = UDim2.fromOffset(0, 89)
+track.BackgroundColor3 = Color3.fromRGB(48, 53, 65)
+track.BorderSizePixel = 0
+track.ClipsDescendants = true
+track.Parent = content
+
+Instance.new("UICorner", track).CornerRadius = UDim.new(1, 0)
+
+-- PROGRESS FILL
+local fill = Instance.new("Frame")
+fill.Size = UDim2.fromScale(0, 1)
+fill.BackgroundColor3 = Color3.fromRGB(0, 162, 255)
+fill.BorderSizePixel = 0
+fill.Parent = track
+
+Instance.new("UICorner", fill).CornerRadius = UDim.new(1, 0)
+
+-- FILL GRADIENT
+local fillGradient = Instance.new("UIGradient")
+fillGradient.Color = ColorSequence.new({
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(0, 145, 255)),
+    ColorSequenceKeypoint.new(0.5, Color3.fromRGB(70, 170, 255)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(130, 115, 255))
+})
+fillGradient.Parent = fill
+
+-- PERCENTAGE
+local percentage = Instance.new("TextLabel")
+percentage.Size = UDim2.new(1, 0, 0, 20)
+percentage.Position = UDim2.fromOffset(0, 103)
+percentage.BackgroundTransparency = 1
+percentage.Text = "0%"
+percentage.TextColor3 = Color3.fromRGB(200, 210, 225)
+percentage.TextSize = 13
+percentage.Font = Enum.Font.GothamMedium
+percentage.Parent = content
+
+-- ENTRANCE
+content.Position = UDim2.fromScale(0.5, 0.53)
+
+TweenService:Create(
+    content,
+    TweenInfo.new(0.8, Enum.EasingStyle.Quart, Enum.EasingDirection.Out),
+    {
+        Position = UDim2.fromScale(0.5, 0.5),
+        GroupTransparency = 0
+    }
+):Play()
+
+-- LOADING DOTS
+task.spawn(function()
+    local dots = 0
+
+    while gui.Parent do
+        dots = (dots % 3) + 1
+        title.Text = "Loading" .. string.rep(".", dots)
+        task.wait(0.5)
+    end
+end)
+
+-- SUBTLE SHINE ANIMATION
+task.spawn(function()
+    while gui.Parent do
+        fillGradient.Offset = Vector2.new(-1, 0)
+
+        local shine = TweenService:Create(
+            fillGradient,
+            TweenInfo.new(1.8, Enum.EasingStyle.Linear),
+            {Offset = Vector2.new(1, 0)}
+        )
+
+        shine:Play()
+        shine.Completed:Wait()
+
+        task.wait(0.3)
+    end
+end)
+
+-- GRADUAL PROGRESS
+for i = 1, MAX_PERCENT do
+
+    -- Gradually slower every single percentage
+    local delayTime = START_DELAY + (i * INCREASE_PER_PERCENT)
+
+    percentage.Text = i .. "%"
+
+    if i < 25 then
+        subtitle.Text = "Preparing your experience"
+    elseif i < 50 then
+        subtitle.Text = "Loading game resources"
+    elseif i < 75 then
+        subtitle.Text = "Preparing the world"
+    elseif i < 95 then
+        subtitle.Text = "Almost ready"
+    else
+        subtitle.Text = "Finalizing..."
+    end
+
+    local tween = TweenService:Create(
+        fill,
+        TweenInfo.new(delayTime, Enum.EasingStyle.Linear),
+        {
+            Size = UDim2.fromScale(i / 100, 1)
+        }
+    )
+
+    tween:Play()
+    tween.Completed:Wait()
+end
+
+-- PERMANENT 99%
+percentage.Text = "99%"
+subtitle.Text = "Almost there..."
+fill.Size = UDim2.fromScale(0.99, 1)
+
+-- SUBTLE ACCENT PULSE
+while gui.Parent do
+    local pulse = TweenService:Create(
+        accent,
+        TweenInfo.new(1.5, Enum.EasingStyle.Sine),
+        {
+            BackgroundColor3 = Color3.fromRGB(100, 190, 255)
+        }
+    )
+
+    pulse:Play()
+    pulse.Completed:Wait()
+
+    local reverse = TweenService:Create(
+        accent,
+        TweenInfo.new(1.5, Enum.EasingStyle.Sine),
+        {
+            BackgroundColor3 = Color3.fromRGB(0, 162, 255)
+        }
+    )
+
+    reverse:Play()
+    reverse.Completed:Wait()
+end
